@@ -1,0 +1,103 @@
+import pygame as p
+import os
+from board import Board
+
+WIDTH = HEIGHT = 600
+BOARD_WIDTH = 552
+DIMENSION = 8
+SQ_SIZE = BOARD_WIDTH // DIMENSION
+startX = startY = (WIDTH - BOARD_WIDTH) // 2
+FPS = 15
+bo = Board(DIMENSION, DIMENSION)
+
+
+def drawboard(screen):
+    colors = [p.Color(232, 235, 239), p.Color(125, 135, 150)]
+    for r in range(DIMENSION):
+        for c in range(DIMENSION):
+            color = colors[(r+c)&1]
+            p.draw.rect(screen, color, p.Rect(startX + c*SQ_SIZE, startY + r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
+
+def redraw_gamewindow(screen):
+    global bo
+    drawboard(screen)
+    bo.draw(screen)
+    font = p.font.SysFont('Arial', 20)
+    
+    whitecm = font.render('White Checkmated. (R to restart)', True, (0, 0, 0))
+    blackcm = font.render('Black Checkmated. (R to restart)', True, (0, 0, 0))
+    
+    if bo.is_checkmate('w'): screen.blit(whitecm, (150, 285))
+    if bo.is_checkmate('b'): screen.blit(blackcm, (150, 285))
+    
+    
+    p.display.update()
+    
+    
+def click(pos):
+    '''
+    return index on board given mouse click
+    '''
+    x, y = pos
+    row, col = -1, -1
+    if startX < x < startX + BOARD_WIDTH:
+        if startY < y < startY + BOARD_WIDTH:
+            x -= startX
+            y -= startY
+            row = y // SQ_SIZE
+            col = x // SQ_SIZE
+            
+    # print(row, col)
+    return (row, col)
+        
+    
+    
+
+def main():
+    p.init()
+    screen = p.display.set_mode((WIDTH, HEIGHT))
+    p.display.set_caption('Chess Game')
+    
+    clock = p.time.Clock()
+    screen.fill(p.Color(59, 1, 60))
+    
+    running = True
+    start = (None, None)
+    while running:
+        redraw_gamewindow(screen)
+        
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                running = False
+                break
+            if e.type == p.KEYDOWN:
+                if e.key == p.K_z:
+                    bo.undomove()
+                if e.key == p.K_r:
+                    bo.reset_board()
+                    
+            if e.type == p.MOUSEBUTTONDOWN:
+                pos = p.mouse.get_pos()
+                row, col = click(pos)
+                if (row, col) != (-1, -1):
+                    if start != (None, None):
+                        if (col, row) in bo.board[start[0]][start[1]].valid_moves(bo):
+                            bo.make_move(start, (row, col))
+                            start = (None, None)
+                            
+                        else:
+                            start = bo.select(row, col)
+                    else: start = bo.select(row, col)
+                else:
+                    bo.unselectall()
+                        
+            
+        clock.tick(FPS)
+        p.display.flip()
+        
+    p.quit()
+    
+    
+if __name__ == "__main__":
+    main()

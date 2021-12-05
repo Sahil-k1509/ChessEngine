@@ -2,6 +2,7 @@ import pygame as p
 import os
 from board import Board
 
+
 WIDTH = HEIGHT = 600
 BOARD_WIDTH = 552
 DIMENSION = 8
@@ -12,6 +13,9 @@ bo = Board(DIMENSION, DIMENSION)
 
 
 def drawboard(screen):
+    '''
+    Draw the checkered pattern chess board.
+    '''
     colors = [p.Color(232, 235, 239), p.Color(125, 135, 150)]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
@@ -19,10 +23,10 @@ def drawboard(screen):
             p.draw.rect(screen, color, p.Rect(startX + c*SQ_SIZE, startY + r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
-def redraw_gamewindow(screen):
-    global bo
-    drawboard(screen)
-    bo.draw(screen)
+def end_screen(bo, screen):
+    '''
+    Check if the game has ended and display the text on screen.
+    '''
     font = p.font.SysFont('Arial', 20)
     
     whitecm = font.render('White Checkmated. (R to restart)', True, (0, 0, 0))
@@ -31,13 +35,28 @@ def redraw_gamewindow(screen):
     if bo.is_checkmate('w'): screen.blit(whitecm, (150, 285))
     if bo.is_checkmate('b'): screen.blit(blackcm, (150, 285))
     
+    whitesm = font.render('White Stalemated. (R to restart)', True, (0, 0, 0))
+    blacksm = font.render('Black Stalemated. (R to restart)', True, (0, 0, 0))
+    
+    if bo.is_stalemate('w'): screen.blit(whitesm, (150, 285))
+    if bo.is_stalemate('b'): screen.blit(blacksm, (150, 285))
+    
+
+def redraw_gamewindow(screen):
+    '''
+    Draw board, add pieces and update screen.
+    '''
+    global bo
+    drawboard(screen)
+    bo.draw(screen)
+    end_screen(bo, screen)
     
     p.display.update()
     
     
 def click(pos):
     '''
-    return index on board given mouse click
+    return index of cell on board given mouse click.
     '''
     x, y = pos
     row, col = -1, -1
@@ -51,8 +70,6 @@ def click(pos):
     # print(row, col)
     return (row, col)
         
-    
-    
 
 def main():
     p.init()
@@ -78,19 +95,23 @@ def main():
                     bo.reset_board()
                     
             if e.type == p.MOUSEBUTTONDOWN:
+                '''
+                # If the click is outside board unselect all pieces
+                # If there is no piece already selected, then select this one.
+                # Otherwise if the cell is in valid moves, move the piece.
+                # Otherwise unselect the piece or select other piece.
+                '''
                 pos = p.mouse.get_pos()
                 row, col = click(pos)
+                
                 if (row, col) != (-1, -1):
                     if start != (None, None):
                         if (col, row) in bo.board[start[0]][start[1]].valid_moves(bo):
                             bo.make_move(start, (row, col))
-                            start = (None, None)
-                            
-                        else:
-                            start = bo.select(row, col)
+                            start = (None, None)    
+                        else: start = bo.select(row, col)
                     else: start = bo.select(row, col)
-                else:
-                    bo.unselectall()
+                else: bo.unselectall()
                         
             
         clock.tick(FPS)

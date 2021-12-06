@@ -116,16 +116,20 @@ class Board:
         Returns the piece captured if any and add the move to log.
         '''
         removed = self.board[end[0]][end[1]]
+        promoted = False
         
         self.board[end[0]][end[1]] = self.board[start[0]][start[1]]
         self.board[start[0]][start[1]] = None
         self.board[end[0]][end[1]].row = end[0]
         self.board[end[0]][end[1]].col = end[1]
+        color = self.board[end[0]][end[1]].color
         
         if self.board[end[0]][end[1]].img == 'p' and not calc: 
             self.board[end[0]][end[1]].firstMove = False
+            if end[0] == 0:
+                self.board[end[0]][end[1]] = Queen(end[0], end[1], color)
+                promoted = True
         
-        color = self.board[end[0]][end[1]].color
         opp_color = 'w' if color == 'b' else 'b'
         
         in_check = self.is_check(color)
@@ -137,7 +141,7 @@ class Board:
         self.board[x][y].inCheck = in_check
             
         self.turn = 'b' if self.turn == 'w' else 'w'
-        self.movelog.append([start, end, removed])
+        self.movelog.append([start, end, removed, promoted])
         
         return removed
     
@@ -149,7 +153,7 @@ class Board:
             self.unselectall()
             
         if self.movelog:
-            start, end, removed = self.movelog.pop()
+            start, end, removed, promoted = self.movelog.pop()
             
             self.rotate_board()
             self.board[start[0]][start[1]] = self.board[end[0]][end[1]]
@@ -164,6 +168,10 @@ class Board:
                 
             self.board[start[0]][start[1]].row = start[0]
             self.board[start[0]][start[1]].col = start[1]
+            
+            if promoted:
+                self.board[start[0]][start[1]] = Pawn(start[0], start[1], self.board[start[0]][start[1]].color)
+            
             self.turn = 'b' if self.turn == 'w' else 'w'
             
             in_check = self.is_check('w')

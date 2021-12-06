@@ -8,6 +8,9 @@ IMAGES = {}
 
 
 def loadImages():
+    '''
+    Load the images of all pieces.
+    '''
     global IMAGES
     pieces = ['wp', 'wR', 'wN', 'wB', 'wK', 'wQ',
               'bp', 'bR', 'bN', 'bB', 'bK', 'bQ' ]
@@ -29,12 +32,19 @@ class Piece:
         self.selected = False
         
     def all_moves(self, bo):
-        pass
+        '''
+        Returns all the moves the piece can make.
+        '''
     
     def valid_moves(self, bo):
-        pass
+        '''
+        Returns the valid moves the piece can make.
+        '''
     
     def draw(self, screen, bo):
+        '''
+        Draw the piece on board and it's valid moves if selected.
+        '''
         board = bo.board
         image = IMAGES[self.color + self.img]
         
@@ -65,6 +75,12 @@ class Piece:
 
         
 class Pawn(Piece): 
+    '''
+    Pawn moves two squares on it's first move and one square in further moves.
+    It can only move in front direction and take opponents pieces diagonally above it.
+    Once a pawn reaches last row, it can be promoted to a Queen, Rook, Knight or Bishop.
+    Capturing a pawn is worth 1 point.
+    '''
     img = 'p'
     def __init__(self, row, col, color):
         super().__init__(row, col, color)
@@ -81,7 +97,7 @@ class Pawn(Piece):
             
             if bo.is_check(self.color):
                 del moves[i]
-            bo.undomove()
+            bo.undomove(calc = True)
         
         return moves
     
@@ -123,6 +139,10 @@ class Pawn(Piece):
     
         
 class Rook(Piece): 
+    '''
+    Rook can move any number of steps in horizontal and vertical directions.
+    Capturing a rook is worth 5 points.
+    '''
     img = 'R'
     
     def valid_moves(self, bo):
@@ -135,7 +155,7 @@ class Rook(Piece):
             
             if bo.is_check(self.color):
                 del moves[i]
-            bo.undomove()
+            bo.undomove(calc = True)
         
         return moves
     
@@ -192,6 +212,10 @@ class Rook(Piece):
         return moves
     
 class Knight(Piece): 
+    '''
+    A knight is the only piece that can jump over pieces and moves in a 'L' shape.
+    Capturing a knight is worth 3 points.
+    '''
     img = 'N'
     
     def valid_moves(self, bo):
@@ -204,7 +228,7 @@ class Knight(Piece):
             
             if bo.is_check(self.color):
                 del moves[i]
-            bo.undomove()
+            bo.undomove(calc = True)
         
         return moves
     
@@ -229,6 +253,10 @@ class Knight(Piece):
     
     
 class Bishop(Piece): 
+    '''
+    A bishop can move any number of steps in diagonal directions.
+    Capturing a bishop is worth 3 points.
+    '''
     img = 'B'
     
     def valid_moves(self, bo):
@@ -241,7 +269,7 @@ class Bishop(Piece):
             
             if bo.is_check(self.color):
                 del moves[i]
-            bo.undomove()
+            bo.undomove(calc = True)
             
         return moves
     
@@ -297,6 +325,10 @@ class Bishop(Piece):
     
     
 class Queen(Piece): 
+    '''
+    A queen is a combination of bishop and rook and can move any number of steps in all directions.
+    Capturing a queen is worth 9 points.
+    '''
     img = 'Q'
 
     def valid_moves(self, bo):
@@ -309,7 +341,7 @@ class Queen(Piece):
             
             if bo.is_check(self.color):
                 del moves[i]
-            bo.undomove()
+            bo.undomove(calc = True)
         
         return moves
     
@@ -408,6 +440,9 @@ class Queen(Piece):
     
     
 class King(Piece): 
+    '''
+    A king can only move 1 step in all directions.
+    '''
     img = 'K'
     
     def __init__(self, row, col, color):
@@ -424,7 +459,7 @@ class King(Piece):
             
             if bo.is_check(self.color):
                 del moves[i]
-            bo.undomove()
+            bo.undomove(calc = True)
         
         return moves
     

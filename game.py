@@ -91,8 +91,10 @@ def main():
             if e.type == p.KEYDOWN:
                 if e.key == p.K_z:
                     bo.undomove()
+                    start = (None, None)
                 if e.key == p.K_r:
                     bo.reset_board()
+                    start = (None, None)
                     
             if e.type == p.MOUSEBUTTONDOWN:
                 '''

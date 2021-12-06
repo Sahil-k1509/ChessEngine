@@ -141,16 +141,22 @@ class Board:
         
         return removed
     
-    def undomove(self):
+    def undomove(self, calc = False):
         '''
         Undo the last move.
         '''
+        if not calc:
+            self.unselectall()
+            
         if self.movelog:
             start, end, removed = self.movelog.pop()
             
             self.rotate_board()
             self.board[start[0]][start[1]] = self.board[end[0]][end[1]]
             self.board[end[0]][end[1]] = removed
+            
+            if self.board[start[0]][start[1]].img == 'p' and start[0] == 6:
+                self.board[start[0]][start[1]].firstMove = True
             
             if removed is not None:
                 self.board[end[0]][end[1]].row = end[0]

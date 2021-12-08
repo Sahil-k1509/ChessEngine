@@ -105,12 +105,54 @@ class Board:
         if not calc:
             self.unselectall()
             
-            print(self.chess_notation(start[0], start[1]), end=' -> ')
-            print(self.chess_notation(end[0], end[1]))
+            # print(self.chess_notation(start[0], start[1]), end=' -> ')
+            # print(self.chess_notation(end[0], end[1]))
             
         self.rotate_board()
+        
+    def make_move_computer(self, start, end):
+        '''
+        Call move function and rotate board for next player.
+        '''
+        self.move(start, end)
+        
+        self.unselectall()
+        
+        self.rotate_board()
+        self.move_computer()
+        
+        
+    def move_computer(self):
+        from random import randint, choice
+        
+        cutoff = 80
+        anyvalidmove = False
+        while True:
+            for i in range(8):
+                for j in range(8):
+                    if self.board[i][j] is None: continue
+                    if self.board[i][j].color == self.turn:
+                        validmoves = self.board[i][j].valid_moves(self)
+                        # print(validmoves)
+                        if validmoves:
+                            anyvalidmove = True
+                            if randint(10, 100) >= cutoff:
+                                randomMove = choice(validmoves)
+                                print((i, j), randomMove)
+                                self.move((i, j), (randomMove[1], randomMove[0]), comp = True)
+                                self.rotate_board()
+                                return
+                        else:
+                            cutoff -= 10
+                            
+            if not anyvalidmove:
+                # self.rotate_board()
+                return
             
-    def move(self, start, end, calc = False):
+            
+                        
+            
+    def move(self, start, end, calc = False, comp = False):
         '''
         Move the piece in start cell to end cell and see if there is check on any king.
         Returns the piece captured if any and add the move to log.
@@ -124,10 +166,23 @@ class Board:
         self.board[end[0]][end[1]].col = end[1]
         color = self.board[end[0]][end[1]].color
         
+        firstmove = False
+        if self.board[end[0]][end[1]].img in ['p', 'K']:
+            firstmove = self.board[end[0]][end[1]].firstMove
+        
+        if self.board[end[0]][end[1]].img == 'K' and not calc: 
+            self.board[end[0]][end[1]].firstMove = False
+            
         if self.board[end[0]][end[1]].img == 'p' and not calc: 
             self.board[end[0]][end[1]].firstMove = False
             if end[0] == 0:
-                self.board[end[0]][end[1]] = Queen(end[0], end[1], color)
+                promoteTo = {'R': Rook, 'N': Knight, 'B': Bishop, 'Q': Queen}
+                if not comp:
+                    print("What do you want to promote to:\n(R)ook\tk(N)ight\t(B)ishop\t(Q)ueen - ")
+                    prom = promoteTo.get(input().upper(), 'Q')
+                else:
+                    prom = promoteTo['Q']
+                self.board[end[0]][end[1]] = prom(end[0], end[1], color)
                 promoted = True
         
         opp_color = 'w' if color == 'b' else 'b'
@@ -141,7 +196,8 @@ class Board:
         self.board[x][y].inCheck = in_check
             
         self.turn = 'b' if self.turn == 'w' else 'w'
-        self.movelog.append([start, end, removed, promoted])
+            
+        self.movelog.append([start, end, removed, promoted, firstmove])
         
         return removed
     
@@ -153,13 +209,13 @@ class Board:
             self.unselectall()
             
         if self.movelog:
-            start, end, removed, promoted = self.movelog.pop()
+            start, end, removed, promoted, firstmove = self.movelog.pop()
             
             self.rotate_board()
             self.board[start[0]][start[1]] = self.board[end[0]][end[1]]
             self.board[end[0]][end[1]] = removed
             
-            if self.board[start[0]][start[1]].img == 'p' and start[0] == 6:
+            if firstmove:
                 self.board[start[0]][start[1]].firstMove = True
             
             if removed is not None:
@@ -191,6 +247,13 @@ class Board:
                 if self.board[i][j] is None: continue
                 if self.board[i][j].color == color and self.board[i][j].img == 'K':
                     return (i, j)
+                
+        
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] is None: print("  ", end=' ')
+                else: print(self.board[i][j].color + self.board[i][j].img, end=' ')
+            print()
                 
     def is_checkmate(self, color):
         '''

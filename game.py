@@ -31,15 +31,13 @@ def end_screen(bo, screen):
     
     whitecm = font.render('White Checkmated. (R to restart)', True, (0, 0, 0))
     blackcm = font.render('Black Checkmated. (R to restart)', True, (0, 0, 0))
-    
-    if bo.is_checkmate('w'): screen.blit(whitecm, (150, 285))
-    if bo.is_checkmate('b'): screen.blit(blackcm, (150, 285))
-    
     whitesm = font.render('White Stalemated. (R to restart)', True, (0, 0, 0))
     blacksm = font.render('Black Stalemated. (R to restart)', True, (0, 0, 0))
     
-    if bo.is_stalemate('w'): screen.blit(whitesm, (150, 285))
-    if bo.is_stalemate('b'): screen.blit(blacksm, (150, 285))
+    if bo.is_checkmate('w'): screen.blit(whitecm, (150, 285))
+    elif bo.is_checkmate('b'): screen.blit(blackcm, (150, 285))
+    elif bo.is_stalemate('w'): screen.blit(whitesm, (150, 285))
+    elif bo.is_stalemate('b'): screen.blit(blacksm, (150, 285))
     
 
 def redraw_gamewindow(screen):
@@ -72,12 +70,18 @@ def click(pos):
         
 
 def main():
+    print("Select Game Mode:\n(1) Against Computer\n(2) Against Player")
+    gamemode = input()
+    if gamemode == '1': gamemode = int(gamemode)
+    else: gamemode = 2
+    
     p.init()
     screen = p.display.set_mode((WIDTH, HEIGHT))
     p.display.set_caption('Chess Game')
     
     clock = p.time.Clock()
     screen.fill(p.Color(59, 1, 60))
+    
     
     running = True
     start = (None, None)
@@ -89,7 +93,7 @@ def main():
                 running = False
                 break
             if e.type == p.KEYDOWN:
-                if e.key == p.K_z:
+                if e.key == p.K_z and gamemode == 2:
                     bo.undomove()
                     start = (None, None)
                 if e.key == p.K_r:
@@ -109,7 +113,10 @@ def main():
                 if (row, col) != (-1, -1):
                     if start != (None, None):
                         if (col, row) in bo.board[start[0]][start[1]].valid_moves(bo):
-                            bo.make_move(start, (row, col))
+                            if gamemode == 2:
+                                bo.make_move(start, (row, col))
+                            else:
+                                bo.make_move_computer(start, (row, col))
                             start = (None, None)    
                         else: start = bo.select(row, col)
                     else: start = bo.select(row, col)

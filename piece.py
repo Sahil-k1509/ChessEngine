@@ -448,6 +448,7 @@ class King(Piece):
     def __init__(self, row, col, color):
         super().__init__(row, col, color)
         self.inCheck = False
+        self.firstMove = True
     
     def valid_moves(self, bo):
         moves = self.all_moves(bo)

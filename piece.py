@@ -93,6 +93,10 @@ class Pawn(Piece):
         l = len(moves)
         for i in range(l-1, -1, -1):
             move = moves[i]
+            if bo.board[move[1]][move[0]] is not None and bo.board[move[1]][move[0]].img == 'K':
+                del moves[i]
+                continue
+            
             bo.make_move((self.row, self.col), (move[1], move[0]), calc = True)
             
             if bo.is_check(self.color):
@@ -107,32 +111,32 @@ class Pawn(Piece):
         j = self.col
         
         moves = []
-        # if self.color == 'g':
-        #     if self.firstMove:    
-        #         p = board[i+2][j]
-        #         if p is None and board[i+1][j] is None:
-        #             moves.append((j, i+2))
-        #     if i < 7:
-        #         p = board[i+1][j]
-        #         if p is None:
-        #             moves.append((j, i+1))
-        #         if j < DIMENSION - 1 and board[i+1][j+1] is not None and board[i+1][j+1].color != self.color:
-        #             moves.append((j+1, i+1))
-        #         if j > 0 and board[i+1][j-1] is not None and board[i+1][j-1].color != self.color:
-        #             moves.append((j-1, i+1))
-        # else:
-        if self.firstMove:    
-            p = board[i-2][j]
-            if p is None and board[i-1][j] is None:
-                moves.append((j, i-2))
-        if i > 0:
-            p = board[i-1][j]
-            if p is None:
-                moves.append((j, i-1))
-            if j < DIMENSION - 1 and board[i-1][j+1] is not None and board[i-1][j+1].color != self.color:
-                moves.append((j+1, i-1))
-            if j > 0 and board[i-1][j-1] is not None and board[i-1][j-1].color != self.color:
-                moves.append((j-1, i-1))   
+        if self.color == 'b':
+            if self.firstMove:    
+                p = board[i+2][j]
+                if p is None and board[i+1][j] is None:
+                    moves.append((j, i+2))
+            if i < 7:
+                p = board[i+1][j]
+                if p is None:
+                    moves.append((j, i+1))
+                if j < DIMENSION - 1 and board[i+1][j+1] is not None and board[i+1][j+1].color != self.color:
+                    moves.append((j+1, i+1))
+                if j > 0 and board[i+1][j-1] is not None and board[i+1][j-1].color != self.color:
+                    moves.append((j-1, i+1))
+        else:
+            if self.firstMove:    
+                p = board[i-2][j]
+                if p is None and board[i-1][j] is None:
+                    moves.append((j, i-2))
+            if i > 0:
+                p = board[i-1][j]
+                if p is None:
+                    moves.append((j, i-1))
+                if j < DIMENSION - 1 and board[i-1][j+1] is not None and board[i-1][j+1].color != self.color:
+                    moves.append((j+1, i-1))
+                if j > 0 and board[i-1][j-1] is not None and board[i-1][j-1].color != self.color:
+                    moves.append((j-1, i-1))   
                 
         return moves
                 
@@ -151,6 +155,10 @@ class Rook(Piece):
         l = len(moves)
         for i in range(l-1, -1, -1):
             move = moves[i]
+            if bo.board[move[1]][move[0]] is not None and bo.board[move[1]][move[0]].img == 'K':
+                del moves[i]
+                continue
+            
             bo.make_move((self.row, self.col), (move[1], move[0]), calc = True)
             
             if bo.is_check(self.color):
@@ -224,6 +232,10 @@ class Knight(Piece):
         l = len(moves)
         for i in range(l-1, -1, -1):
             move = moves[i]
+            if bo.board[move[1]][move[0]] is not None and bo.board[move[1]][move[0]].img == 'K':
+                del moves[i]
+                continue
+            
             bo.make_move((self.row, self.col), (move[1], move[0]), calc = True)
             
             if bo.is_check(self.color):
@@ -265,6 +277,10 @@ class Bishop(Piece):
         l = len(moves)
         for i in range(l-1, -1, -1):
             move = moves[i]
+            if bo.board[move[1]][move[0]] is not None and bo.board[move[1]][move[0]].img == 'K':
+                del moves[i]
+                continue
+            
             bo.make_move((self.row, self.col), (move[1], move[0]), calc = True)
             
             if bo.is_check(self.color):
@@ -337,6 +353,10 @@ class Queen(Piece):
         l = len(moves)
         for i in range(l-1, -1, -1):
             move = moves[i]
+            if bo.board[move[1]][move[0]] is not None and bo.board[move[1]][move[0]].img == 'K':
+                del moves[i]
+                continue
+            
             bo.make_move((self.row, self.col), (move[1], move[0]), calc = True)
             
             if bo.is_check(self.color):
@@ -456,6 +476,10 @@ class King(Piece):
         l = len(moves)
         for i in range(l-1, -1, -1):
             move = moves[i]
+            if bo.board[move[1]][move[0]] is not None and bo.board[move[1]][move[0]].img == 'K':
+                del moves[i]
+                continue
+            
             bo.make_move((self.row, self.col), (move[1], move[0]), calc = True)
             
             if bo.is_check(self.color):

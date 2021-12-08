@@ -1,6 +1,9 @@
 import pygame as p
 from piece import Pawn, Rook, Knight, Bishop, Queen, King
+from chessAI import MoveFinder
 
+class NoKingError(Exception):
+    pass
 
 class Board:
     def __init__(self, rows, cols):
@@ -87,18 +90,18 @@ class Board:
         '''
         Convert the (row, col) to chess notation.
         '''
-        if self.turn == 'w':
-            alp = chr(col + ord('a')) 
-            num = 8 - row
-            return f'{alp}{num}'
-        else:
-            num = row + 1
-            alp = chr(ord('h') - col)
-            return f'{alp}{num}'
+        # if self.turn == 'w':
+        alp = chr(col + ord('a')) 
+        num = 8 - row
+        return f'{alp}{num}'
+        # else:
+        #     num = row + 1
+        #     alp = chr(ord('h') - col)
+        #     return f'{alp}{num}'
         
     def make_move(self, start, end, calc = False):
         '''
-        Call move function and rotate board for next player.
+        Call move function and unselect all pieces.
         '''
         self.move(start, end, calc)
         
@@ -107,47 +110,28 @@ class Board:
             
             # print(self.chess_notation(start[0], start[1]), end=' -> ')
             # print(self.chess_notation(end[0], end[1]))
-            
-        self.rotate_board()
+        
         
     def make_move_computer(self, start, end):
         '''
-        Call move function and rotate board for next player.
+        Call move function for player and computer.
         '''
         self.move(start, end)
         
         self.unselectall()
         
-        self.rotate_board()
         self.move_computer()
         
         
     def move_computer(self):
-        from random import randint, choice
-        
-        cutoff = 80
-        anyvalidmove = False
-        while True:
-            for i in range(8):
-                for j in range(8):
-                    if self.board[i][j] is None: continue
-                    if self.board[i][j].color == self.turn:
-                        validmoves = self.board[i][j].valid_moves(self)
-                        # print(validmoves)
-                        if validmoves:
-                            anyvalidmove = True
-                            if randint(10, 100) >= cutoff:
-                                randomMove = choice(validmoves)
-                                print((i, j), randomMove)
-                                self.move((i, j), (randomMove[1], randomMove[0]), comp = True)
-                                self.rotate_board()
-                                return
-                        else:
-                            cutoff -= 10
-                            
-            if not anyvalidmove:
-                # self.rotate_board()
-                return
+        '''
+        Chooses a random valid move and execute it. If no valid moves are present computer is lost.
+        '''
+        move = MoveFinder.randomMove(self)
+        if move is None: return
+        start = move[0]
+        end = move[1]
+        self.move(start, end, comp=True)
             
             
                         
@@ -175,10 +159,10 @@ class Board:
             
         if self.board[end[0]][end[1]].img == 'p' and not calc: 
             self.board[end[0]][end[1]].firstMove = False
-            if end[0] == 0:
+            if end[0] == 0 or end[0] == 7:
                 promoteTo = {'R': Rook, 'N': Knight, 'B': Bishop, 'Q': Queen}
                 if not comp:
-                    print("What do you want to promote to:\n(R)ook\tk(N)ight\t(B)ishop\t(Q)ueen - ")
+                    print("What do you want to promote to:\n(R)ook\tk(N)ight\t(B)ishop\t(Q)ueen - ", end='')
                     prom = promoteTo.get(input().upper(), 'Q')
                 else:
                     prom = promoteTo['Q']
@@ -211,7 +195,7 @@ class Board:
         if self.movelog:
             start, end, removed, promoted, firstmove = self.movelog.pop()
             
-            self.rotate_board()
+            
             self.board[start[0]][start[1]] = self.board[end[0]][end[1]]
             self.board[end[0]][end[1]] = removed
             
@@ -247,13 +231,14 @@ class Board:
                 if self.board[i][j] is None: continue
                 if self.board[i][j].color == color and self.board[i][j].img == 'K':
                     return (i, j)
-                
-        
-        for i in range(8):
-            for j in range(8):
-                if self.board[i][j] is None: print("  ", end=' ')
-                else: print(self.board[i][j].color + self.board[i][j].img, end=' ')
-            print()
+           
+        # for i in range(8):
+        #     for j in range(8):
+        #         if self.board[i][j] is None: print("  ", end=' ')
+        #         else: print(self.board[i][j].color + self.board[i][j].img, end=' ')
+        #     print()
+            
+        raise NoKingError(f"{color} King is not present on the board")
                 
     def is_checkmate(self, color):
         '''

@@ -109,19 +109,19 @@ def main():
                 '''
                 pos = p.mouse.get_pos()
                 row, col = click(pos)
-                
-                if (row, col) != (-1, -1):
-                    if start != (None, None):
-                        if (col, row) in bo.board[start[0]][start[1]].valid_moves(bo):
-                            if gamemode == 2:
+                if gamemode == 2 or bo.turn == 'w':
+                    if (row, col) != (-1, -1):
+                        if start != (None, None):
+                            if (col, row) in bo.board[start[0]][start[1]].valid_moves(bo):
                                 bo.make_move(start, (row, col))
-                            else:
-                                bo.make_move_computer(start, (row, col))
-                            start = (None, None)    
+                                start = (None, None)    
+                            else: start = bo.select(row, col)
                         else: start = bo.select(row, col)
-                    else: start = bo.select(row, col)
-                else: bo.unselectall()
-                        
+                    else: bo.unselectall()
+                
+        if gamemode == 1 and bo.turn == 'b':
+            redraw_gamewindow(screen)
+            bo.make_move_computer()
             
         clock.tick(FPS)
         p.display.flip()

@@ -112,22 +112,32 @@ class Board:
             # print(self.chess_notation(end[0], end[1]))
         
         
-    def make_move_computer(self, start, end):
+    def make_move_computer(self):
         '''
-        Call move function for player and computer.
+        Call move function for computer.
         '''
-        self.move(start, end)
-        
-        self.unselectall()
-        
         self.move_computer()
+        
+        
+    def generate_valid_moves(self, color):
+        validmoves = []
+        for i in range(8):
+            for j in range(8):
+                if self.board[i][j] is None: continue
+                if self.board[i][j].color == color:
+                    vm = self.board[i][j].valid_moves(self)
+                    for move in vm:
+                        validmoves.append([(i, j), (move[1], move[0])])
+                        
+        return validmoves
+        
         
         
     def move_computer(self):
         '''
         Chooses a valid move for computer and execute it. If no valid moves are present computer is lost.
         '''
-        move = MoveFinder.greedyMove(self)
+        move = MoveFinder.miniMaxSmall(self)
         
         if move is None: return
         start = move[0]

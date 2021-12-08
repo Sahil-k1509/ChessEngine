@@ -125,9 +125,10 @@ class Board:
         
     def move_computer(self):
         '''
-        Chooses a random valid move and execute it. If no valid moves are present computer is lost.
+        Chooses a valid move for computer and execute it. If no valid moves are present computer is lost.
         '''
-        move = MoveFinder.randomMove(self)
+        move = MoveFinder.greedyMove(self)
+        
         if move is None: return
         start = move[0]
         end = move[1]

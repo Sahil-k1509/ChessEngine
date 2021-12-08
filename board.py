@@ -255,6 +255,8 @@ class Board:
         '''
         Return if the king is currently in checkmate.
         '''
+        if self.turn != color: return False
+        
         for i in range(8):
             for j in range(8):
                 if self.board[i][j] is None: continue
@@ -276,6 +278,8 @@ class Board:
         '''
         Return if the king is currently in stalemate.
         '''
+        if self.turn != color: return False
+        
         for i in range(8):
             for j in range(8):
                 if self.board[i][j] is None: continue

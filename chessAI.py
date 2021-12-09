@@ -23,8 +23,8 @@ class MoveFinder:
         cutoff = 80
         anyvalidmove = False
         while True:
-            for i in range(8):
-                for j in range(8):
+            for i in range(bo.rows):
+                for j in range(bo.cols):
                     if bo.board[i][j] is None: continue
                     if bo.board[i][j].color == bo.turn:
                         validmoves = bo.board[i][j].valid_moves(bo)
@@ -45,11 +45,12 @@ class MoveFinder:
     def find_score(bo):
         '''
         Find the score of board based on pieces.
+        Positive score is good for white.
         '''
         score = 0
         board = bo.board
-        for i in range(8):
-            for j in range(8):
+        for i in range(bo.rows):
+            for j in range(bo.cols):
                 if board[i][j] is None: continue
                 if board[i][j].color == 'w':
                     score += pieceScore[board[i][j].img]
@@ -68,8 +69,8 @@ class MoveFinder:
         maxScore = MoveFinder.find_score(bo)*turnMultiplier
         bestMove = None
         effective = False
-        for i in range(8):
-            for j in range(8):
+        for i in range(bo.rows):
+            for j in range(bo.cols):
                 if bo.board[i][j] is None: continue
                 if bo.board[i][j].color == bo.turn:
                     validmoves = bo.board[i][j].valid_moves(bo)
@@ -124,14 +125,15 @@ class MoveFinder:
             opponentMaxScore = -CHECKMATE
             for oppMove in opponent_moves:
                 bo.make_move(oppMove[0], oppMove[1], calc = True)
+                score = 0
                 if bo.is_checkmate(bo.turn):
                     score = -CHECKMATE*turnMultiplier
                 elif bo.is_stalemate(bo.turn):
                     score = STALEMATE
                 elif bo.is_check(bo.turn):
                     score = -CHECK*turnMultiplier
-                else:
-                    score = -MoveFinder.find_score(bo)*turnMultiplier
+                
+                score += -MoveFinder.find_score(bo)*turnMultiplier
                     
                 if score > opponentMaxScore:
                     opponentMaxScore = score        
@@ -148,3 +150,69 @@ class MoveFinder:
             return MoveFinder.randomMove(bo)
         
         return bestMove
+    
+    
+    @staticmethod   
+    def scoreBoard(bo):
+        '''
+        Improved method to find score.
+        '''
+        if bo.is_checkmate('w'): return -CHECKMATE
+        if bo.is_checkmate('b'): return CHECKMATE
+        if bo.is_stalemate('w') or bo.is_stalemate('b'): return STALEMATE
+        
+        score = 0
+        board = bo.board
+        for i in range(bo.rows):
+            for j in range(bo.cols):
+                if board[i][j] is None: continue
+                if board[i][j].color == 'w':
+                    score += pieceScore[board[i][j].img]
+                else:
+                    score -= pieceScore[board[i][j].img]
+                    
+        return score
+    
+    @staticmethod
+    def miniMax(bo):
+        nextMove = None
+        maxDepth = 2
+
+        def miniMaxHelper(bo, depth, whiteToMove):
+            nonlocal nextMove, maxDepth
+            if depth == 0:
+                return MoveFinder.scoreBoard(bo)
+            
+            if whiteToMove:
+                maxScore = -CHECKMATE
+                validmoves = bo.generate_valid_moves('w')
+                shuffle(validmoves)
+                for move in validmoves:
+                    bo.make_move(move[0], move[1], calc = True)
+                    score = miniMaxHelper(bo, depth - 1, False)
+                    if score > maxScore:
+                        maxScore = score
+                        if depth == maxDepth:
+                            nextMove = move
+                    bo.undomove(calc = True)
+                return maxScore
+            else:
+                minScore = CHECKMATE
+                validmoves = bo.generate_valid_moves('b')
+                shuffle(validmoves)
+                for move in validmoves:
+                    bo.make_move(move[0], move[1], calc = True)
+                    score = miniMaxHelper(bo, depth - 1, True)
+                    if score < minScore:
+                        minScore = score
+                        if depth == maxDepth:
+                            nextMove = move
+                    bo.undomove(calc = True)
+                return minScore         
+            
+        whiteToMove = (bo.turn == 'w')
+        miniMaxHelper(bo, maxDepth, whiteToMove)
+        if nextMove is None:
+            return MoveFinder.randomMove(bo)
+        
+        return nextMove

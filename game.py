@@ -3,7 +3,7 @@ import os
 from board import Board
 
 
-WIDTH = HEIGHT = 600
+WIDTH = HEIGHT = 650
 BOARD_WIDTH = 552
 DIMENSION = 8
 SQ_SIZE = BOARD_WIDTH // DIMENSION
@@ -33,6 +33,10 @@ def end_screen(bo, screen):
     blackcm = font.render('Black Checkmated. (R to restart)', True, (0, 0, 0))
     whitesm = font.render('White Stalemated. (R to restart)', True, (0, 0, 0))
     blacksm = font.render('Black Stalemated. (R to restart)', True, (0, 0, 0))
+    tm = font.render(f"{'white' if bo.turn == 'w' else 'Black'} to move", True, (255, 255, 255))
+    
+    p.draw.rect(screen, (59, 1, 60), p.Rect(startX, 10, 125, 20))
+    screen.blit(tm, (startX, 10))
     
     if bo.is_checkmate('w'): screen.blit(whitecm, (150, 285))
     elif bo.is_checkmate('b'): screen.blit(blackcm, (150, 285))

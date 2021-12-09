@@ -139,7 +139,7 @@ class Board:
         '''
         Chooses a valid move for computer and execute it. If no valid moves are present computer is lost.
         '''
-        move = MoveFinder.miniMaxSmall(self)
+        move = MoveFinder.miniMax(self)
         
         if move is None: return
         start = move[0]

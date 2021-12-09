@@ -113,7 +113,8 @@ def main():
                     if (row, col) != (-1, -1):
                         if start != (None, None):
                             if (col, row) in bo.board[start[0]][start[1]].valid_moves(bo):
-                                bo.make_move(start, (row, col))
+                                if bo.castling(start, (row, col)): pass
+                                else: bo.make_move(start, (row, col))
                                 start = (None, None)    
                             else: start = bo.select(row, col)
                         else: start = bo.select(row, col)

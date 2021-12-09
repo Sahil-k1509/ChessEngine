@@ -116,7 +116,7 @@ class Pawn(Piece):
                 p = board[i+2][j]
                 if p is None and board[i+1][j] is None:
                     moves.append((j, i+2))
-            if i < 7:
+            if i < DIMENSION - 1:
                 p = board[i+1][j]
                 if p is None:
                     moves.append((j, i+1))
@@ -148,6 +148,11 @@ class Rook(Piece):
     Capturing a rook is worth 5 points.
     '''
     img = 'R'
+    
+    def __init__(self, row, col, color):
+        super().__init__(row, col, color)
+        self.firstMove = True
+        
     
     def valid_moves(self, bo):
         moves = self.all_moves(bo)
@@ -485,7 +490,41 @@ class King(Piece):
             if bo.is_check(self.color):
                 del moves[i]
             bo.undomove(calc = True)
-        
+            
+        if self.firstMove:
+            try:
+                if bo.board[self.row][self.col + 1] is None and bo.board[self.row][self.col + 2] is None:
+                    if bo.board[self.row][self.col + 3].img == 'R' and bo.board[self.row][self.col + 3].color == self.color and bo.board[self.row][self.col + 3].firstMove:
+                        if not bo.is_check(self.color):
+                            bo.make_move((self.row, self.col), (self.row, self.col+1), calc = True)
+                            if not bo.is_check(self.color):
+                                bo.undomove(calc = True)
+                                bo.make_move((self.row, self.col), (self.row, self.col+2), calc = True)
+                                if not bo.is_check(self.color):
+                                    bo.undomove(calc = True)
+                                    moves.append((self.col + 2, self.row))
+                                else:
+                                    bo.undomove(calc = True)
+                            else:
+                                bo.undomove(calc = True)
+                                
+                if bo.board[self.row][self.col - 1] is None and bo.board[self.row][self.col - 2] is None and bo.board[self.row][self.col - 3] is None:
+                    if bo.board[self.row][self.col - 4].img == 'R' and bo.board[self.row][self.col - 4].color == self.color and bo.board[self.row][self.col - 4].firstMove:
+                        if not bo.is_check(self.color):
+                            bo.make_move((self.row, self.col), (self.row, self.col-1), calc = True)
+                            if not bo.is_check(self.color):
+                                bo.undomove(calc = True)
+                                bo.make_move((self.row, self.col), (self.row, self.col-2), calc = True)
+                                if not bo.is_check(self.color):
+                                    bo.undomove(calc = True)
+                                    moves.append((self.col - 2, self.row))
+                                else:
+                                    bo.undomove(calc = True)
+                            else:
+                                bo.undomove(calc = True)   
+            except Exception as e:
+                print(e)  
+                
         return moves
     
     def all_moves(self, bo):

@@ -38,7 +38,6 @@ class Board:
                     self.board[i][j] = None
                     
         self.movelog = []
-        self.movelogcomp = []
         self.turn = 'w'
                     
         
@@ -55,8 +54,8 @@ class Board:
         '''
         Unselect all the pieces on board.
         '''
-        for i in range(8):
-            for j in range(8):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if self.board[i][j]: self.board[i][j].selected = False
                     
     def select(self, row, col):
@@ -77,11 +76,11 @@ class Board:
         '''
         self.board = self.board[::-1]
         
-        for i in range(8):
+        for i in range(self.rows):
             self.board[i] = self.board[i][::-1]
             
-        for i in range(8):
-            for j in range(8):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if self.board[i][j] is not None:
                     self.board[i][j].row = i
                     self.board[i][j].col = j
@@ -92,18 +91,18 @@ class Board:
         '''
         # if self.turn == 'w':
         alp = chr(col + ord('a')) 
-        num = 8 - row
+        num = self.rows - row
         return f'{alp}{num}'
         # else:
         #     num = row + 1
         #     alp = chr(ord('h') - col)
         #     return f'{alp}{num}'
         
-    def make_move(self, start, end, calc = False):
+    def make_move(self, start, end, calc = False, castle = False):
         '''
         Call move function and unselect all pieces.
         '''
-        self.move(start, end, calc)
+        self.move(start, end, calc, castle = castle)
         
         if not calc:
             self.unselectall()
@@ -120,9 +119,12 @@ class Board:
         
         
     def generate_valid_moves(self, color):
+        '''
+        Generates all valid moves for all the pieces.
+        '''
         validmoves = []
-        for i in range(8):
-            for j in range(8):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if self.board[i][j] is None: continue
                 if self.board[i][j].color == color:
                     vm = self.board[i][j].valid_moves(self)
@@ -142,12 +144,33 @@ class Board:
         if move is None: return
         start = move[0]
         end = move[1]
+        if self.castling(start, end):
+            return
         self.move(start, end, comp=True)
             
-            
+    def castling(self, start, end):
+        '''
+        Check if current move is castling. If it is do the castle else do normal move.
+        '''
+        sr, sc = start[0], start[1]
+        er, ec = end[0], end[1]
+        if self.board[sr][sc] is None or self.board[sr][sc].img != 'K':
+            return False
+        
+        if sr == er and abs(sc-ec) == 2:
+            if ec > sc:
+                self.make_move((sr, sc), (er, ec))
+                self.make_move((sr, ec+1), (er, ec-1), castle = True)
+                self.movelog.append("castling")
+            else:
+                self.make_move((sr, sc), (er, ec))
+                self.make_move((sr, ec-2), (er, ec+1), castle = True)
+                self.movelog.append("castling")                
+            return True
+        else: return False  
                         
             
-    def move(self, start, end, calc = False, comp = False):
+    def move(self, start, end, calc = False, comp = False, castle = False):
         '''
         Move the piece in start cell to end cell and see if there is check on any king.
         Returns the piece captured if any and add the move to log.
@@ -162,15 +185,18 @@ class Board:
         color = self.board[end[0]][end[1]].color
         
         firstmove = False
-        if self.board[end[0]][end[1]].img in ['p', 'K']:
+        if self.board[end[0]][end[1]].img in ['p', 'K', 'R']:
             firstmove = self.board[end[0]][end[1]].firstMove
         
         if self.board[end[0]][end[1]].img == 'K' and not calc: 
             self.board[end[0]][end[1]].firstMove = False
+        
+        if self.board[end[0]][end[1]].img == 'R' and not calc: 
+            self.board[end[0]][end[1]].firstMove = False
             
         if self.board[end[0]][end[1]].img == 'p' and not calc: 
             self.board[end[0]][end[1]].firstMove = False
-            if end[0] == 0 or end[0] == 7:
+            if end[0] == 0 or end[0] == self.rows - 1:
                 promoteTo = {'R': Rook, 'N': Knight, 'B': Bishop, 'Q': Queen}
                 if not comp:
                     print("What do you want to promote to:\n(R)ook\tk(N)ight\t(B)ishop\t(Q)ueen - ", end='')
@@ -190,7 +216,8 @@ class Board:
         x, y = self.find_king(opp_color)
         self.board[x][y].inCheck = in_check
             
-        self.turn = 'b' if self.turn == 'w' else 'w'
+        if not castle:
+            self.turn = 'b' if self.turn == 'w' else 'w'
             
         self.movelog.append([start, end, removed, promoted, firstmove])
         
@@ -200,10 +227,17 @@ class Board:
         '''
         Undo the last move.
         '''
+        
         if not calc:
             self.unselectall()
             
         if self.movelog:
+            if self.movelog[-1] == "castling":
+                self.movelog.pop()
+                self.undomove()
+                self.undomove()
+                return
+            
             start, end, removed, promoted, firstmove = self.movelog.pop()
             
             
@@ -237,8 +271,8 @@ class Board:
         '''
         Find the position of king on the board.
         '''
-        for i in range(8):
-            for j in range(8):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if self.board[i][j] is None: continue
                 if self.board[i][j].color == color and self.board[i][j].img == 'K':
                     return (i, j)
@@ -257,8 +291,8 @@ class Board:
         '''
         if self.turn != color: return False
         
-        for i in range(8):
-            for j in range(8):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if self.board[i][j] is None: continue
                 if self.board[i][j].color == color:
                     '''
@@ -280,8 +314,8 @@ class Board:
         '''
         if self.turn != color: return False
         
-        for i in range(8):
-            for j in range(8):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if self.board[i][j] is None: continue
                 if self.board[i][j].color == color:
                     validmoves = self.board[i][j].valid_moves(self)
@@ -303,8 +337,8 @@ class Board:
         # Generate all the moves of opponent.
         # check if any of the move attack the cell of king.
         '''
-        for i in range(8):
-            for j in range(8):
+        for i in range(self.rows):
+            for j in range(self.cols):
                 if self.board[i][j] is None: continue
                 if self.board[i][j].color == opp_color:
                     validmoves = self.board[i][j].all_moves(self)

@@ -75,8 +75,13 @@ def click(pos):
 
 def main():
     print("Select Game Mode:\n(1) Against Computer\n(2) Against Player")
-    gamemode = input()
-    if gamemode == '1': gamemode = int(gamemode)
+    gamemode = input("Choose: ")
+    if gamemode == '1': 
+        gamemode = int(gamemode)
+        print("Play as? (w)hite or (b)lack: ",end='')
+        playerColor = input()
+        bo.setPlayerColor(playerColor)
+        if bo.playerColor == 'b': bo.rotate_board()
     else: gamemode = 2
     
     p.init()
@@ -113,7 +118,7 @@ def main():
                 '''
                 pos = p.mouse.get_pos()
                 row, col = click(pos)
-                if gamemode == 2 or bo.turn == 'w':
+                if gamemode == 2 or bo.turn == bo.playerColor:
                     if (row, col) != (-1, -1):
                         if start != (None, None):
                             if (col, row) in bo.board[start[0]][start[1]].valid_moves(bo):
@@ -124,7 +129,7 @@ def main():
                         else: start = bo.select(row, col)
                     else: bo.unselectall()
                 
-        if gamemode == 1 and bo.turn == 'b':
+        if gamemode == 1 and bo.turn != bo.playerColor:
             redraw_gamewindow(screen)
             bo.make_move_computer()
             

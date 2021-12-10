@@ -23,7 +23,12 @@ class Board:
         ]
         
         self.board = [[None for _ in range(cols)] for _ in range(rows)]
+        self.playerColor = 'w'
         self.reset_board()
+        
+    def setPlayerColor(self, playerColor):
+        if playerColor not in ['w', 'b']: return
+        self.playerColor = playerColor
         
     def reset_board(self):
         '''
@@ -39,6 +44,7 @@ class Board:
                     
         self.movelog = []
         self.turn = 'w'
+        
                     
         
     def draw(self, screen):
@@ -89,14 +95,14 @@ class Board:
         '''
         Convert the (row, col) to chess notation.
         '''
-        # if self.turn == 'w':
-        alp = chr(col + ord('a')) 
-        num = self.rows - row
-        return f'{alp}{num}'
-        # else:
-        #     num = row + 1
-        #     alp = chr(ord('h') - col)
-        #     return f'{alp}{num}'
+        if self.playerColor == 'w':
+            alp = chr(col + ord('a')) 
+            num = self.rows - row
+            return f'{alp}{num}'
+        else:
+            num = row + 1
+            alp = chr(ord('h') - col)
+            return f'{alp}{num}'
         
     def make_move(self, start, end, calc = False, castle = False):
         '''
@@ -139,7 +145,7 @@ class Board:
         '''
         Chooses a valid move for computer and execute it. If no valid moves are present computer is lost.
         '''
-        move = MoveFinder.miniMax(self)
+        move = MoveFinder.negaMax(self)
         
         if move is None: return
         start = move[0]
@@ -158,13 +164,14 @@ class Board:
             return False
         
         if sr == er and abs(sc-ec) == 2:
-            if ec > sc:
+            mult = 1 if self.playerColor == 'w' else -1
+            if (ec > sc and mult == 1) or (sc > ec and mult == -1):
                 self.make_move((sr, sc), (er, ec))
-                self.make_move((sr, ec+1), (er, ec-1), castle = True)
+                self.make_move((sr, ec+1*mult), (er, ec-1*mult), castle = True)
                 self.movelog.append("castling")
             else:
                 self.make_move((sr, sc), (er, ec))
-                self.make_move((sr, ec-2), (er, ec+1), castle = True)
+                self.make_move((sr, ec-2*mult), (er, ec+1*mult), castle = True)
                 self.movelog.append("castling")                
             return True
         else: return False  

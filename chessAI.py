@@ -1,16 +1,109 @@
 from random import randint, choice, shuffle
+import pygame as p
+
+def rotated(board, mult=1):
+    n, m = len(board), len(board[0])
+    new_board = [[0]*m for _ in range(n)]
+    for i in range(n):
+        for j in range(m):
+            new_board[i][j] = -board[i][j]*mult
+    
+    new_board = new_board[::-1]
+    for i in range(n):
+        new_board[i] = new_board[i][::-1]
+        
+    return new_board
 
 pieceScore = {
     'K': 0,
-    'Q': 90,
-    'R': 50,
-    'B': 30,
-    'N': 30,
-    'p': 10 
+    'Q': 10000,
+    'R': 6000,
+    'B': 3000,
+    'N': 3000,
+    'p': 1000 
 }
-CHECKMATE = 1000
+CHECKMATE = 100000
 STALEMATE = 0
-CHECK = 20
+CHECK = 900
+
+pawnTable = [
+    [ 0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ],
+    [ 20,  10,  15,  30,  20,  15,  10,  20],
+    [ 10,  5 ,  10,  0 ,  15,  10,  5 ,  10],
+    [ 5 ,  5 ,  0 ,  5 ,  0 ,  0 ,  5 ,  5 ],
+    [ 0 ,  0 ,  5 ,  15,  5 ,  5 ,  0 ,  0 ],
+    [ 5 ,  0 ,  0 ,  10,  10,  0 ,  0 ,  5 ],
+    [ 10,  10,  0 , -10, -10,  0 ,  10,  10],
+    [ 0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ]
+]
+rookTable = [
+    [ 20,  30,  40,  50,  50,  40,  30,  20],
+    [ 0 ,  20,  30,  40,  40,  30,  20,  0 ],
+    [ 0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  30,  30,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  30,  30,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  20,  20,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  20,  30,  30,  20,  0 ,  0 ],
+    [ 0 ,  0 ,  10,  30,  30,  10,  0 ,  0 ]
+]
+bishopTable = [
+    [ 20,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  20],
+    [ 0 ,  10,  0 ,  0 ,  0 ,  0 ,  10,  0 ],
+    [ 0 ,  0 ,  0 ,  8 ,  5 ,  0 ,  0 ,  0 ],
+    [ 0 ,  30,  0 ,  10,  0 ,  10,  30,  0 ],
+    [ 0 ,  0 ,  20,  10,  10,  20,  0 ,  0 ],
+    [ 0 ,  0 ,  10,  5 ,  5 ,  10,  0 ,  0 ],
+    [ 0 ,  5 ,  0 ,  5 ,  5 ,  0 ,  5 ,  0 ],
+    [ 0 ,  0 , -10,  0 ,  0 , -10,  0 ,  0 ]
+]
+knightTable = [
+    [ 5 ,  0 ,  0 ,  5 ,  5 ,  0 ,  0 ,  5 ],
+    [ 0 ,  0 ,  10,  0 ,  0 ,  10,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  10,  10,  0 ,  0 ,  0 ],
+    [ 0 ,  5 ,  0 ,  5 ,  5 ,  0 ,  5 ,  0 ],
+    [ 0 ,  0 ,  0 ,  5 ,  5 ,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  5 ,  0 ,  0 ,  10,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  5 ,  5 ,  0 ,  0 ,  0 ],
+    [ 0 , -5 ,  0 ,  0 ,  0 ,  0 , -10,  0 ]
+]
+queenTable = [
+    [ 40,  25,  30,  40,  40,  30,  25,  40],
+    [ 0 ,  20,  0 ,  0 ,  0 ,  0 ,  20,  0 ],
+    [ 0 ,  0 ,  10,  0 ,  0 ,  10,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  30,  30,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  30,  30,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  10,  5 ,  10,  0 ,  0 ],
+    [ 0 ,  0 ,  5 ,  5 ,  5 ,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ]
+]
+kingTable = [
+    [-40, -25, -30, -40, -40, -30, -25, -40],
+    [-10, -20, -10, -10, -10, -10, -20, -10],
+    [ -5,  -5, -10, -10, -10, -10,  -5,  -5],
+    [ 0 ,  0 ,  0 , -30, -30,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  0 , -30, -30,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  0 , -10,  -5, -10,  0 ,  0 ],
+    [-10,  -8,  -5,  -5,  -5,  -5,  -8, -10],
+    [ 0 ,  0 ,  20,   0,  10,  0 ,  10,  0 ]
+]
+
+pieceTablePlayer = {
+    'K': kingTable,
+    'Q': queenTable,
+    'R': rookTable,
+    'B': bishopTable,
+    'N': knightTable,
+    'p': pawnTable
+}
+
+pieceTableComputer = {
+    'K': rotated(kingTable),
+    'Q': rotated(queenTable),
+    'R': rotated(rookTable),
+    'B': rotated(bishopTable),
+    'N': rotated(knightTable),
+    'p': rotated(pawnTable)
+}
 
 class MoveFinder:
     
@@ -52,10 +145,8 @@ class MoveFinder:
         for i in range(bo.rows):
             for j in range(bo.cols):
                 if board[i][j] is None: continue
-                if board[i][j].color == 'w':
-                    score += pieceScore[board[i][j].img]
-                else:
-                    score -= pieceScore[board[i][j].img]
+                if board[i][j].color == 'w': score += pieceScore[board[i][j].img]
+                else: score -= pieceScore[board[i][j].img]
                     
         return score
     
@@ -166,6 +257,19 @@ class MoveFinder:
         for i in range(bo.rows):
             for j in range(bo.cols):
                 if board[i][j] is None: continue
+                
+                if bo.playerColor == 'w':
+                    if board[i][j].color == 'w': 
+                        score += pieceTablePlayer[board[i][j].img][i][j]
+                    else:
+                        score += pieceTableComputer[board[i][j].img][i][j]
+                else:
+                    if board[i][j].color == 'w': 
+                        score += rotated(pieceTablePlayer[board[i][j].img], mult=-1)[i][j]
+                    else:
+                        score += rotated(pieceTableComputer[board[i][j].img], mult=-1)[i][j]
+                
+                
                 if board[i][j].color == 'w':
                     score += pieceScore[board[i][j].img]
                 else:
@@ -175,11 +279,13 @@ class MoveFinder:
     
     @staticmethod
     def miniMax(bo):
-        nextMove = None
-        maxDepth = 2
+        bestMove = None
+        maxDepth = 3
+        movescalc = 0
 
         def miniMaxHelper(bo, depth, whiteToMove):
-            nonlocal nextMove, maxDepth
+            nonlocal bestMove, maxDepth, movescalc
+            movescalc += 1
             if depth == 0:
                 return MoveFinder.scoreBoard(bo)
             
@@ -193,7 +299,7 @@ class MoveFinder:
                     if score > maxScore:
                         maxScore = score
                         if depth == maxDepth:
-                            nextMove = move
+                            bestMove = move
                     bo.undomove(calc = True)
                 return maxScore
             else:
@@ -206,13 +312,61 @@ class MoveFinder:
                     if score < minScore:
                         minScore = score
                         if depth == maxDepth:
-                            nextMove = move
+                            bestMove = move
                     bo.undomove(calc = True)
                 return minScore         
             
         whiteToMove = (bo.turn == 'w')
         miniMaxHelper(bo, maxDepth, whiteToMove)
-        if nextMove is None:
+        if bestMove is None:
+            return MoveFinder.randomMove(bo)
+        # print("Moves Calculated:",movescalc)
+        return bestMove
+    
+    
+    @staticmethod
+    def negaMax(bo):
+        bestMove = None
+        maxDepth = 2 + 1*(randint(0, 500) > 400)
+        movescalc = 0
+
+        def negaMaxHelper(bo, depth, turnMultiplier, alpha, beta):
+            nonlocal bestMove, maxDepth, movescalc
+            p.event.pump()
+            movescalc += 1
+            if depth == 0:
+                return turnMultiplier*MoveFinder.scoreBoard(bo)
+            
+            # move_ordering
+            maxScore = -CHECKMATE
+            if turnMultiplier == 1: validmoves = bo.generate_valid_moves("w")
+            else: validmoves = bo.generate_valid_moves("b")
+                
+            shuffle(validmoves)
+            for move in validmoves:
+                bo.make_move(move[0], move[1], calc = True)
+                
+                score = - negaMaxHelper(bo, depth - 1, - turnMultiplier, - beta, - alpha)
+                if score > maxScore:
+                    maxScore = score
+                    if depth == maxDepth:
+                        bestMove = move
+                
+                bo.undomove(calc = True)
+                if maxScore > alpha:
+                    alpha = maxScore
+                if alpha >= beta:
+                    break
+                
+            return maxScore
+                
+            
+        turnMultiplier = 1 if (bo.turn == 'w') else -1
+        negaMaxHelper(bo, maxDepth, turnMultiplier, -CHECKMATE, CHECKMATE)
+        
+        if bestMove is None:
             return MoveFinder.randomMove(bo)
         
-        return nextMove
+        print("Moves Calculated:",movescalc,"... Depth:",maxDepth)
+        return bestMove
+    

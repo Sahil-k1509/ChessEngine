@@ -81,9 +81,11 @@ class Board:
         Rotate the board 180 degrees.
         '''
         self.board = self.board[::-1]
+        self.rep = self.rep[::-1]
         
         for i in range(self.rows):
             self.board[i] = self.board[i][::-1]
+            self.rep[i] = self.rep[i][::-1]
             
         for i in range(self.rows):
             for j in range(self.cols):

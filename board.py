@@ -44,8 +44,30 @@ class Board:
                     
         self.movelog = []
         self.turn = 'w'
-        
-                    
+    
+    def highlightLastMove(self, screen, startX, startY, SQ_SIZE):
+        if self.movelog:
+            lastmove = self.movelog[-1]
+            if lastmove != "castling":
+                row, col = lastmove[0]
+                x = startX + (col * SQ_SIZE)
+                y = startY + (row * SQ_SIZE)
+                
+                sur = p.Surface((SQ_SIZE, SQ_SIZE))
+                sur.set_alpha(128)
+                sur.fill((219, 149, 229))
+                screen.blit(sur, (x, y))
+                
+                
+                
+                row, col = lastmove[1]
+                x = startX + (col * SQ_SIZE)
+                y = startY + (row * SQ_SIZE)
+                
+                sur = p.Surface((SQ_SIZE, SQ_SIZE))
+                sur.set_alpha(128)
+                sur.fill((219, 149, 229))
+                screen.blit(sur, (x, y))
         
     def draw(self, screen):
         '''
@@ -232,7 +254,7 @@ class Board:
         
         return removed
     
-    def undomove(self, calc = False):
+    def undomove(self, calc = False, comp = False):
         '''
         Undo the last move.
         '''
@@ -241,6 +263,11 @@ class Board:
             self.unselectall()
             
         if self.movelog:
+            if comp:
+                self.undomove()
+                self.undomove()
+                return 
+            
             if self.movelog[-1] == "castling":
                 self.movelog.pop()
                 self.undomove()

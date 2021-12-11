@@ -50,6 +50,7 @@ def redraw_gamewindow(screen):
     '''
     global bo
     drawboard(screen)
+    bo.highlightLastMove(screen, startX, startY, SQ_SIZE)
     bo.draw(screen)
     end_screen(bo, screen)
     
@@ -102,8 +103,11 @@ def main():
                 running = False
                 break
             if e.type == p.KEYDOWN:
-                if e.key == p.K_z and gamemode == 2:
-                    bo.undomove()
+                if e.key == p.K_z and bo.turn == bo.playerColor:
+                    if gamemode == 2:
+                        bo.undomove()
+                    else:
+                        bo.undomove(comp = True)
                     start = (None, None)
                 if e.key == p.K_r:
                     bo.reset_board()

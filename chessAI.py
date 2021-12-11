@@ -327,7 +327,7 @@ class MoveFinder:
     @staticmethod
     def negaMax(bo):
         bestMove = None
-        maxDepth = 2 + 1*(randint(0, 500) > 400)
+        maxDepth = 2 # + 1*(randint(0, 500) > 400)
         movescalc = 0
 
         def negaMaxHelper(bo, depth, turnMultiplier, alpha, beta):

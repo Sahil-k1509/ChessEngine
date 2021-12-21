@@ -113,7 +113,8 @@ Each piece has a base score associated with it. In a game of chess, pawn is
 worth 1 point, bishop and knight are worth 3 points, rook is worth 5 point and    
 queen is worth 9 points. We can assign scores to pieces similar to this basis.    
 
-But, just the piece itself is not an appropriate measure. The position of     piece also matters. I have added piece tables which grants bonus points if    
+But, just the piece itself is not an appropriate measure. The position of    
+piece also matters. I have added piece tables which grants bonus points if    
 a certain type of piece is on a strong square, thus motivating the computer     
 to make certain moves thus improving the structure. The number of valid moves    
 is also considered a factor as a piece free to move is stronger than a trapped    

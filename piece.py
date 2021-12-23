@@ -29,7 +29,9 @@ class Piece:
         self.row = row
         self.col = col
         self.color = color
+        self.moveScore = 0
         self.selected = False
+    
         
     def all_moves(self, bo):
         '''
@@ -72,7 +74,6 @@ class Piece:
                     
         screen.blit(image, (x, y))
            
-
         
 class Pawn(Piece): 
     '''
@@ -103,6 +104,7 @@ class Pawn(Piece):
                 del moves[i]
             bo.undomove(calc = True)
         
+        self.moveScore = len(moves)
         return moves
     
     def all_moves(self, bo):
@@ -111,6 +113,7 @@ class Pawn(Piece):
         j = self.col
         
         moves = []
+        self.moveScore = 0
         if self.color != bo.playerColor:
             if self.firstMove:    
                 p = board[i+2][j]
@@ -152,8 +155,7 @@ class Rook(Piece):
     def __init__(self, row, col, color):
         super().__init__(row, col, color)
         self.firstMove = True
-        
-    
+         
     def valid_moves(self, bo):
         moves = self.all_moves(bo)
         
@@ -170,6 +172,7 @@ class Rook(Piece):
                 del moves[i]
             bo.undomove(calc = True)
         
+        self.moveScore = len(moves)
         return moves
     
     def all_moves(self, bo):
@@ -177,6 +180,7 @@ class Rook(Piece):
         i = self.row
         j = self.col
         
+        self.moveScore = 0
         moves = []
         for off in range(1, DIMENSION):
             x = i + off
@@ -187,7 +191,8 @@ class Rook(Piece):
                 elif board[x][y].color != self.color: 
                     moves.append((y, x))
                     break
-                else: break
+                else:
+                    break
         
         for off in range(1, DIMENSION):
             x = i - off
@@ -198,7 +203,8 @@ class Rook(Piece):
                 elif board[x][y].color != self.color: 
                     moves.append((y, x))
                     break
-                else: break
+                else:
+                    break
                 
         for off in range(1, DIMENSION):
             x = i 
@@ -209,7 +215,8 @@ class Rook(Piece):
                 elif board[x][y].color != self.color: 
                     moves.append((y, x))
                     break
-                else: break
+                else:
+                    break
                 
         for off in range(1, DIMENSION):
             x = i 
@@ -220,7 +227,8 @@ class Rook(Piece):
                 elif board[x][y].color != self.color: 
                     moves.append((y, x))
                     break
-                else: break
+                else:
+                    break
     
         return moves
     
@@ -247,6 +255,7 @@ class Knight(Piece):
                 del moves[i]
             bo.undomove(calc = True)
         
+        self.moveScore = len(moves)
         return moves
     
     def all_moves(self, bo):
@@ -258,6 +267,7 @@ class Knight(Piece):
         vec = [(1, 2), (1, -2), (-1, 2), (-1, -2),
                (2, 1), (2, -1), (-2, 1), (-2, -1)]
         
+        self.movescore = 0
         for x, y in vec:
             x = i + x
             y = j + y
@@ -292,6 +302,7 @@ class Bishop(Piece):
                 del moves[i]
             bo.undomove(calc = True)
             
+        self.moveScore = len(moves)
         return moves
     
     def all_moves(self, bo):
@@ -300,14 +311,17 @@ class Bishop(Piece):
         j = self.col
         
         moves = []
+        self.moveScore = 0
         for off in range(1, DIMENSION):
             x = i + off
             y = j + off
             if 0 <= x < DIMENSION and 0 <= y < DIMENSION:
                 if board[x][y] is None or board[x][y].color != self.color:
                     moves.append((y, x))
-                    if board[x][y] and board[x][y].color != self.color: break
-                else: break
+                    if board[x][y] and board[x][y].color != self.color: 
+                        break
+                else:
+                    break
             else: break
             
         for off in range(1, DIMENSION):
@@ -316,10 +330,11 @@ class Bishop(Piece):
             if 0 <= x < DIMENSION and 0 <= y < DIMENSION:
                 if board[x][y] is None or board[x][y].color != self.color:
                     moves.append((y, x))
-                    if board[x][y] and board[x][y].color != self.color: break
-                else: break
+                    if board[x][y] and board[x][y].color != self.color: 
+                        break
+                else:
+                    break
             else: break
-            
             
         for off in range(1, DIMENSION):
             x = i + off
@@ -327,8 +342,10 @@ class Bishop(Piece):
             if 0 <= x < DIMENSION and 0 <= y < DIMENSION:
                 if board[x][y] is None or board[x][y].color != self.color:
                     moves.append((y, x))
-                    if board[x][y] and board[x][y].color != self.color: break
-                else: break
+                    if board[x][y] and board[x][y].color != self.color: 
+                        break
+                else:
+                    break
             else: break
             
         for off in range(1, DIMENSION):
@@ -337,8 +354,10 @@ class Bishop(Piece):
             if 0 <= x < DIMENSION and 0 <= y < DIMENSION:
                 if board[x][y] is None or board[x][y].color != self.color:
                     moves.append((y, x))
-                    if board[x][y] and board[x][y].color != self.color: break
-                else: break
+                    if board[x][y] and board[x][y].color != self.color: 
+                        break
+                else:
+                    break
             else: break
                 
     
@@ -368,6 +387,7 @@ class Queen(Piece):
                 del moves[i]
             bo.undomove(calc = True)
         
+        self.moveScore = len(moves)
         return moves
     
     def all_moves(self, bo):
@@ -376,14 +396,17 @@ class Queen(Piece):
         j = self.col
         
         moves = []
+        self.moveScore = 0
         for off in range(1, DIMENSION):
             x = i + off
             y = j + off
             if 0 <= x < DIMENSION and 0 <= y < DIMENSION:
                 if board[x][y] is None or board[x][y].color != self.color:
                     moves.append((y, x))
-                    if board[x][y] and board[x][y].color != self.color: break
-                else: break
+                    if board[x][y] and board[x][y].color != self.color: 
+                        break
+                else:
+                    break
             else: break
             
         for off in range(1, DIMENSION):
@@ -392,10 +415,11 @@ class Queen(Piece):
             if 0 <= x < DIMENSION and 0 <= y < DIMENSION:
                 if board[x][y] is None or board[x][y].color != self.color:
                     moves.append((y, x))
-                    if board[x][y] and board[x][y].color != self.color: break
-                else: break
+                    if board[x][y] and board[x][y].color != self.color: 
+                        break
+                else:
+                    break
             else: break
-            
             
         for off in range(1, DIMENSION):
             x = i + off
@@ -403,8 +427,10 @@ class Queen(Piece):
             if 0 <= x < DIMENSION and 0 <= y < DIMENSION:
                 if board[x][y] is None or board[x][y].color != self.color:
                     moves.append((y, x))
-                    if board[x][y] and board[x][y].color != self.color: break
-                else: break
+                    if board[x][y] and board[x][y].color != self.color: 
+                        break
+                else:
+                    break
             else: break
             
         for off in range(1, DIMENSION):
@@ -413,8 +439,10 @@ class Queen(Piece):
             if 0 <= x < DIMENSION and 0 <= y < DIMENSION:
                 if board[x][y] is None or board[x][y].color != self.color:
                     moves.append((y, x))
-                    if board[x][y] and board[x][y].color != self.color: break
-                else: break
+                    if board[x][y] and board[x][y].color != self.color: 
+                        break
+                else:
+                    break
             else: break
         
         for off in range(1, DIMENSION):
@@ -426,7 +454,8 @@ class Queen(Piece):
                 elif board[x][y].color != self.color: 
                     moves.append((y, x))
                     break
-                else: break
+                else:
+                    break
         
         for off in range(1, DIMENSION):
             x = i - off
@@ -437,7 +466,8 @@ class Queen(Piece):
                 elif board[x][y].color != self.color: 
                     moves.append((y, x))
                     break
-                else: break
+                else:
+                    break
                 
         for off in range(1, DIMENSION):
             x = i 
@@ -448,7 +478,8 @@ class Queen(Piece):
                 elif board[x][y].color != self.color: 
                     moves.append((y, x))
                     break
-                else: break
+                else:
+                    break
                 
         for off in range(1, DIMENSION):
             x = i 
@@ -459,7 +490,8 @@ class Queen(Piece):
                 elif board[x][y].color != self.color: 
                     moves.append((y, x))
                     break
-                else: break
+                else:
+                    break
            
         return moves
     
@@ -511,8 +543,7 @@ class King(Piece):
                                     moves.append((y+2*mult, x))
                                 bo.undomove(calc=True)
                             bo.undomove(calc=True)
-                        
-                    
+                                
             except Exception as e:
                 pass  
                 
@@ -532,5 +563,5 @@ class King(Piece):
             y = j + y
             if 0 <= x < DIMENSION and 0 <= y < DIMENSION:
                 if board[x][y] is None or board[x][y].color != self.color: moves.append((y, x))
-    
+                
         return moves

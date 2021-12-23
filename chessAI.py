@@ -2,6 +2,9 @@ from random import randint, choice, shuffle
 import pygame as p
 
 def rotated(board, mult=1):
+    '''
+    Rotate the piece tables and adjust scores for all colors and sides.
+    '''
     n, m = len(board), len(board[0])
     new_board = [[0]*m for _ in range(n)]
     for i in range(n):
@@ -24,12 +27,12 @@ pieceScore = {
 }
 CHECKMATE = 100000
 STALEMATE = 0
-CHECK = 900
+CHECK = 1100
 
 pawnTable = [
-    [ 0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ],
-    [ 20,  10,  15,  30,  20,  15,  10,  20],
-    [ 10,  5 ,  10,  0 ,  15,  10,  5 ,  10],
+    [100, 100, 100, 100, 100, 100, 100, 100],
+    [ 40,  30,  25,  40,  40,  25,  30,  40],
+    [ 20,  5 ,  20,  5 ,  25,  10,  5 ,  20],
     [ 5 ,  5 ,  0 ,  5 ,  0 ,  0 ,  5 ,  5 ],
     [ 0 ,  0 ,  5 ,  15,  5 ,  5 ,  0 ,  0 ],
     [ 5 ,  0 ,  0 ,  10,  10,  0 ,  0 ,  5 ],
@@ -39,12 +42,12 @@ pawnTable = [
 rookTable = [
     [ 20,  30,  40,  50,  50,  40,  30,  20],
     [ 0 ,  20,  30,  40,  40,  30,  20,  0 ],
-    [ 0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ],
-    [ 0 ,  0 ,  0 ,  30,  30,  0 ,  0 ,  0 ],
+    [ 0 ,  0 ,  0 ,  20,  20,  10,  0 ,  0 ],
+    [ 0 ,  0 ,  10,  30,  30,  0 ,  20,  0 ],
     [ 0 ,  0 ,  0 ,  30,  30,  0 ,  0 ,  0 ],
     [ 0 ,  0 ,  0 ,  20,  20,  0 ,  0 ,  0 ],
     [ 0 ,  0 ,  20,  30,  30,  20,  0 ,  0 ],
-    [ 0 ,  0 ,  10,  30,  30,  10,  0 ,  0 ]
+    [ 0 ,  0 ,  10,  30,  30,  10,  10,  0 ]
 ]
 bishopTable = [
     [ 20,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  20],
@@ -107,6 +110,23 @@ pieceTableComputer = {
 
 class MoveFinder:
     
+    @staticmethod   
+    def find_score(bo):
+        '''
+        Find the score of board based on piece value only.
+        Positive score is good for white.
+        '''
+        score = 0
+        board = bo.board
+        for i in range(bo.rows):
+            for j in range(bo.cols):
+                if board[i][j] is None: continue
+                if board[i][j].color == 'w': score += pieceScore[board[i][j].img]
+                else: score -= pieceScore[board[i][j].img]
+                    
+        return score
+    
+    
     @staticmethod
     def randomMove(bo):
         '''
@@ -134,21 +154,6 @@ class MoveFinder:
             if not anyvalidmove:
                 return None
     
-    @staticmethod   
-    def find_score(bo):
-        '''
-        Find the score of board based on pieces.
-        Positive score is good for white.
-        '''
-        score = 0
-        board = bo.board
-        for i in range(bo.rows):
-            for j in range(bo.cols):
-                if board[i][j] is None: continue
-                if board[i][j].color == 'w': score += pieceScore[board[i][j].img]
-                else: score -= pieceScore[board[i][j].img]
-                    
-        return score
     
     @staticmethod
     def greedyMove(bo):
@@ -236,7 +241,6 @@ class MoveFinder:
             
             bo.undomove()
                     
-        
         if bestMove is None:
             return MoveFinder.randomMove(bo)
         
@@ -253,6 +257,10 @@ class MoveFinder:
         if bo.is_stalemate('w') or bo.is_stalemate('b'): return STALEMATE
         
         score = 0
+        
+        if bo.is_check('w'): score -= CHECK
+        elif bo.is_check('b'): score += CHECK
+        
         board = bo.board
         for i in range(bo.rows):
             for j in range(bo.cols):
@@ -271,14 +279,18 @@ class MoveFinder:
                 
                 
                 if board[i][j].color == 'w':
-                    score += pieceScore[board[i][j].img]
+                    score += (20*pieceScore[board[i][j].img] + board[i][j].moveScore*8 + 12*bo.calculate_control('w'))
                 else:
-                    score -= pieceScore[board[i][j].img]
+                    score -= (20*pieceScore[board[i][j].img] + board[i][j].moveScore*8 + 12*bo.calculate_control('b'))
                     
         return score
     
+    
     @staticmethod
     def miniMax(bo):
+        '''
+        Recursive mini max algorithm without optimization.
+        '''
         bestMove = None
         maxDepth = 3
         movescalc = 0
@@ -326,6 +338,9 @@ class MoveFinder:
     
     @staticmethod
     def negaMax(bo):
+        '''
+        Efficient implementation of minimax(Negamax) with alpha beta pruning.
+        '''
         bestMove = None
         maxDepth = 2 # + 1*(randint(0, 500) > 400)
         movescalc = 0

@@ -10,6 +10,9 @@ SQ_SIZE = BOARD_WIDTH // DIMENSION
 startX = startY = (WIDTH - BOARD_WIDTH) // 2
 FPS = 15
 bo = Board(DIMENSION, DIMENSION)
+p.init()
+screen = p.display.set_mode((WIDTH, HEIGHT))
+p.display.set_caption('Chess Game')
 
 
 def drawboard(screen):
@@ -72,27 +75,131 @@ def click(pos):
             
     # print(row, col)
     return (row, col)
+
+
+def main_menu(screen):
+    screen.fill(p.Color(180, 180, 200))
+    
+    running = True
+    p1x, p1y, p1w, p1h = 20, 30, 200, 50
+    p2x, p2y, p2w, p2h = 20, 120, 200, 50
+    gamemode, playerColor = 1, 'w'
+    clock = p.time.Clock()
+    
+    
+    p.draw.rect(screen, (30, 30, 30), p.Rect(p1x, p1y, p1w, p1h))
+    p.draw.rect(screen, (30, 30, 30), p.Rect(p2x, p2y, p2w, p2h))
+    
+    font = p.font.SysFont('Arial', 20)
+    
+    p1txt = font.render('Against Computer', True, (120, 120, 120))
+    screen.blit(p1txt, (p1x + 20, p1y + 15))
+    
+    p2txt = font.render('Against Player', True, (120, 120, 120))
+    screen.blit(p2txt, (p2x + 20, p2y + 15))
+    
+    while running:
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                exit(0)
+                
+            if e.type == p.MOUSEBUTTONDOWN:
+                x, y = p.mouse.get_pos()
+                if p1x <= x <= p1x + p1w and p1y <= y <= p1y + p1h:
+                    gamemode = 1
+                    running = False
+                    break
+                
+                if p2x <= x <= p2x + p2w and p2y <= y <= p2y + p2h:
+                    gamemode = 2
+                    running = False
+                    break
+                
+        clock.tick(FPS)
+        p.display.flip()
+    
+    if gamemode == 1:
+        running = True
+        p.draw.rect(screen, (30, 30, 30), p.Rect(p1x, p1y, p1w, p1h))
+        p.draw.rect(screen, (30, 30, 30), p.Rect(p2x, p2y, p2w, p2h))
         
+        p1txt = font.render('Play as White', True, (120, 120, 120))
+        screen.blit(p1txt, (p1x + 20, p1y + 15))
+        
+        p2txt = font.render('Play as black', True, (120, 120, 120))
+        screen.blit(p2txt, (p2x + 20, p2y + 15))
+        
+        while running:
+            for e in p.event.get():
+                if e.type == p.QUIT:
+                    exit(0)
+                    
+                if e.type == p.MOUSEBUTTONDOWN:
+                    x, y = p.mouse.get_pos()
+                    if p1x <= x <= p1x + p1w and p1y <= y <= p1y + p1h:
+                        playerColor = 'w'
+                        running = False
+                        break
+                    
+                    if p2x <= x <= p2x + p2w and p2y <= y <= p2y + p2h:
+                        playerColor = 'b'
+                        running = False
+                        break
+                
+            clock.tick(FPS)
+            p.display.flip()
+    
+    return (gamemode, playerColor)
+
+
+def promote_menu():
+    global screen
+    
+    screen.fill(p.Color(180, 180, 200))
+    
+    running = True
+    clock = p.time.Clock()
+    
+    font = p.font.SysFont('Arial', 20)
+    heading = font.render('Promote pawn to?', True, (0, 0, 0))
+    screen.blit(heading, (40, 20))
+    
+    promotes = [(40, 60, 100, 40, 'Q', 'Queen'), (40, 120, 100, 40, 'R', 'Rook'), (40, 180, 100, 40, 'N', 'Knight'), (40, 240, 100, 40, 'B', 'Bishop')]
+    
+    for sx, sy, w, h, pc, pn in promotes:
+        p.draw.rect(screen, (30, 30, 30), p.Rect(sx, sy, w, h))
+        name = font.render(pn, True, (180, 180, 200))
+        screen.blit(name, (sx + 10, sy + 10))
+    
+    
+    while running:
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                exit(0)
+                
+            if e.type == p.MOUSEBUTTONDOWN:
+                x, y = p.mouse.get_pos()
+                
+                for sx, sy, w, h, pc, pn in promotes:
+                    if sx <= x <= sx + w and sy <= y <= sy + h:
+                        screen.fill(p.Color(59, 1, 60))
+                        return pc
+                
+                
+        clock.tick(FPS)
+        p.display.flip()
+    
+    
 
 def main():
-    print("Select Game Mode:\n(1) Against Computer\n(2) Against Player")
-    gamemode = input("Choose: ")
-    if gamemode == '1': 
-        gamemode = int(gamemode)
-        print("Play as? (w)hite or (b)lack: ",end='')
-        playerColor = input()
-        bo.setPlayerColor(playerColor)
-        if bo.playerColor == 'b': bo.rotate_board()
-    else: gamemode = 2
-    
-    p.init()
-    screen = p.display.set_mode((WIDTH, HEIGHT))
-    p.display.set_caption('Chess Game')
-    
+    global screen
     clock = p.time.Clock()
+    
+    gamemode, playerColor = main_menu(screen)
+    bo.setPlayerColor(playerColor)
+    if bo.playerColor == 'b': bo.rotate_board()
+    
     screen.fill(p.Color(59, 1, 60))
-    
-    
     running = True
     start = (None, None)
     while running:
@@ -103,10 +210,10 @@ def main():
                 running = False
                 break
             if e.type == p.KEYDOWN:
-                if e.key == p.K_z and bo.turn == bo.playerColor:
+                if e.key == p.K_z:
                     if gamemode == 2:
                         bo.undomove()
-                    else:
+                    elif bo.turn == bo.playerColor:
                         bo.undomove(comp = True)
                     start = (None, None)
                 if e.key == p.K_r:

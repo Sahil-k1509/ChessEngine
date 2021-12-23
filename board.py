@@ -2,6 +2,9 @@ import pygame as p
 from piece import Pawn, Rook, Knight, Bishop, Queen, King
 from chessAI import MoveFinder
 
+p.mixer.init()
+moveSound = p.mixer.Sound('sounds/move.wav')
+
 class NoKingError(Exception):
     pass
 
@@ -25,10 +28,12 @@ class Board:
         self.board = [[None for _ in range(cols)] for _ in range(rows)]
         self.playerColor = 'w'
         self.reset_board()
+  
         
     def setPlayerColor(self, playerColor):
         if playerColor not in ['w', 'b']: return
         self.playerColor = playerColor
+   
         
     def reset_board(self):
         '''
@@ -45,7 +50,11 @@ class Board:
         self.movelog = []
         self.turn = 'w'
     
+    
     def highlightLastMove(self, screen, startX, startY, SQ_SIZE):
+        '''
+        Highlight the squares of opponent's last move.
+        '''
         if self.movelog:
             lastmove = self.movelog[-1]
             if lastmove != "castling":
@@ -57,9 +66,7 @@ class Board:
                 sur.set_alpha(128)
                 sur.fill((219, 149, 229))
                 screen.blit(sur, (x, y))
-                
-                
-                
+                           
                 row, col = lastmove[1]
                 x = startX + (col * SQ_SIZE)
                 y = startY + (row * SQ_SIZE)
@@ -69,6 +76,7 @@ class Board:
                 sur.fill((219, 149, 229))
                 screen.blit(sur, (x, y))
         
+        
     def draw(self, screen):
         '''
         Draw all the chess pieces on board.
@@ -77,14 +85,7 @@ class Board:
             for j in range(self.cols):
                 if self.board[i][j] is not None:
                     self.board[i][j].draw(screen, self)
-                    
-    def unselectall(self):
-        '''
-        Unselect all the pieces on board.
-        '''
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.board[i][j]: self.board[i][j].selected = False
+            
                     
     def select(self, row, col):
         '''
@@ -97,6 +98,16 @@ class Board:
             return (row, col)
         
         return (None, None)
+    
+                    
+    def unselectall(self):
+        '''
+        Unselect all the pieces on board.
+        '''
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.board[i][j]: self.board[i][j].selected = False
+          
     
     def rotate_board(self):
         '''
@@ -114,6 +125,7 @@ class Board:
                 if self.board[i][j] is not None:
                     self.board[i][j].row = i
                     self.board[i][j].col = j
+    
                     
     def chess_notation(self, row, col):
         '''
@@ -127,6 +139,7 @@ class Board:
             num = row + 1
             alp = chr(ord('h') - col)
             return f'{alp}{num}'
+    
         
     def make_move(self, start, end, calc = False, castle = False):
         '''
@@ -136,9 +149,6 @@ class Board:
         
         if not calc:
             self.unselectall()
-            
-            # print(self.chess_notation(start[0], start[1]), end=' -> ')
-            # print(self.chess_notation(end[0], end[1]))
         
         
     def make_move_computer(self):
@@ -146,24 +156,7 @@ class Board:
         Call move function for computer.
         '''
         self.move_computer()
-        
-        
-    def generate_valid_moves(self, color):
-        '''
-        Generates all valid moves for all the pieces.
-        '''
-        validmoves = []
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.board[i][j] is None: continue
-                if self.board[i][j].color == color:
-                    vm = self.board[i][j].valid_moves(self)
-                    for move in vm:
-                        validmoves.append([(i, j), (move[1], move[0])])
-                        
-        return validmoves
-        
-        
+     
         
     def move_computer(self):
         '''
@@ -177,29 +170,7 @@ class Board:
         if self.castling(start, end):
             return
         self.move(start, end, comp=True)
-            
-    def castling(self, start, end):
-        '''
-        Check if current move is castling. If it is do the castle else do normal move.
-        '''
-        sr, sc = start[0], start[1]
-        er, ec = end[0], end[1]
-        if self.board[sr][sc] is None or self.board[sr][sc].img != 'K':
-            return False
-        
-        if sr == er and abs(sc-ec) == 2:
-            mult = 1 if self.playerColor == 'w' else -1
-            if (ec > sc and mult == 1) or (sc > ec and mult == -1):
-                self.make_move((sr, sc), (er, ec))
-                self.make_move((sr, ec+1*mult), (er, ec-1*mult), castle = True)
-                self.movelog.append("castling")
-            else:
-                self.make_move((sr, sc), (er, ec))
-                self.make_move((sr, ec-2*mult), (er, ec+1*mult), castle = True)
-                self.movelog.append("castling")                
-            return True
-        else: return False  
-                        
+     
             
     def move(self, start, end, calc = False, comp = False, castle = False):
         '''
@@ -230,8 +201,7 @@ class Board:
             if end[0] == 0 or end[0] == self.rows - 1:
                 promoteTo = {'R': Rook, 'N': Knight, 'B': Bishop, 'Q': Queen}
                 if not comp:
-                    print("What do you want to promote to:\n(R)ook\tk(N)ight\t(B)ishop\t(Q)ueen - ", end='')
-                    prom = promoteTo.get(input().upper(), 'Q')
+                    prom = promoteTo.get(promote_menu(), 'Q')
                 else:
                     prom = promoteTo['Q']
                 self.board[end[0]][end[1]] = prom(end[0], end[1], color)
@@ -250,10 +220,37 @@ class Board:
         if not castle:
             self.turn = 'b' if self.turn == 'w' else 'w'
             
+        if not calc:
+            moveSound.play()
+            
         self.movelog.append([start, end, removed, promoted, firstmove])
         
         return removed
     
+            
+    def castling(self, start, end):
+        '''
+        Check if current move is castling. If it is do the castle else do normal move.
+        '''
+        sr, sc = start[0], start[1]
+        er, ec = end[0], end[1]
+        if self.board[sr][sc] is None or self.board[sr][sc].img != 'K':
+            return False
+        
+        if sr == er and abs(sc-ec) == 2:
+            mult = 1 if self.playerColor == 'w' else -1
+            if (ec > sc and mult == 1) or (sc > ec and mult == -1):
+                self.make_move((sr, sc), (er, ec))
+                self.make_move((sr, ec+1*mult), (er, ec-1*mult), castle = True)
+                self.movelog.append("castling")
+            else:
+                self.make_move((sr, sc), (er, ec))
+                self.make_move((sr, ec-2*mult), (er, ec+1*mult), castle = True)
+                self.movelog.append("castling")                
+            return True
+        else: return False  
+    
+                        
     def undomove(self, calc = False, comp = False):
         '''
         Undo the last move.
@@ -302,7 +299,59 @@ class Board:
             in_check = self.is_check('b')
             x, y = self.find_king('b')
             self.board[x][y].inCheck = in_check
+       
         
+    def generate_valid_moves(self, color):
+        '''
+        Generates all valid moves for all the pieces.
+        '''
+        validmoves = []
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.board[i][j] is None: continue
+                if self.board[i][j].color == color:
+                    vm = self.board[i][j].valid_moves(self)
+                    for move in vm:
+                        validmoves.append([(i, j), (move[1], move[0])])
+                        
+        return validmoves
+    
+    
+    def generate_all_moves(self, color):
+        '''
+        Generates all valid moves for all the pieces.
+        '''
+        allmoves = []
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.board[i][j] is None: continue
+                if self.board[i][j].color == color:
+                    am = self.board[i][j].all_moves(self)
+                    for move in am:
+                        allmoves.append([(i, j), (move[1], move[0])])
+                        
+        return allmoves
+    
+    
+    def calculate_control(self, color):
+        '''
+        Calculates the Attack and defense score of given color.
+        Attack score is the value of opponent's pieces under attack.
+        Defense score is the value of player's pieces under protection.
+        '''
+        all_moves = self.generate_all_moves(color)
+        pieceScore = {"K": 0, "Q": 100, "R": 60, "N": 30, "B": 30, "p": 10}
+        score = 0
+        prot_coeff, att_coeff = 0.04, 0.06
+        for move in all_moves:
+            x, y = move[1][0], move[1][1]
+            if self.board[x][y] is not None:
+                if self.board[x][y].color == color: score += prot_coeff*pieceScore[self.board[x][y].img]
+                else: score += att_coeff*pieceScore[self.board[x][y].img]
+                
+        return score                
+    
+            
     def find_king(self, color):
         '''
         Find the position of king on the board.
@@ -320,6 +369,7 @@ class Board:
         #     print()
             
         raise NoKingError(f"{color} King is not present on the board")
+                
                 
     def is_checkmate(self, color):
         '''
@@ -344,6 +394,7 @@ class Board:
         
         return False
                 
+                
     def is_stalemate(self, color):
         '''
         Return if the king is currently in stalemate.
@@ -361,6 +412,7 @@ class Board:
             return True
         
         return False
+            
             
     def is_check(self, color):
         '''
@@ -389,6 +441,5 @@ class Board:
             if check: break
         
         return check
-                
-        
-            
+                 
+from game import promote_menu
